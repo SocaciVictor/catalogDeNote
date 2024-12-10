@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.Instant;
 
 @Getter
@@ -28,7 +29,7 @@ public class Grade implements PersistableEntity{
 
     @NotNull
     @Column(name = "added_date", nullable = false)
-    private Instant addedDate;
+    private Timestamp addedDate;
 
     @NotNull
     @Column(name = "active", nullable = false)

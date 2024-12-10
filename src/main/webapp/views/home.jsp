@@ -9,7 +9,6 @@
 <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
 <div class="bg-white p-8 rounded-lg shadow-lg">
     <h1 class="text-2xl font-bold text-gray-900 mb-4">Welcome, <%= request.getAttribute("username") %>!</h1>
-    <p>This is your home page.</p>
 
     <% if ("teacher".equals(session.getAttribute("userType"))) { %>
     <div class="flex space-x-4 mt-6">
@@ -17,10 +16,10 @@
             <a href="courses" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">All Courses</a>
         </button>
         <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            Your Courses
+            <a href="myCourses" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Your Courses</a>
         </button>
         <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-            Grades
+            <a href="grades" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Grades</a>
         </button>
     </div>
     <% } else { %>

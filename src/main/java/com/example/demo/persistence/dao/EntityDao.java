@@ -27,4 +27,20 @@ public class EntityDao<T extends PersistableEntity> {
     public List<T> findAllByParams(Class<T> entityType, ParameterPair ... params) throws Exception {
         return connection.findAllByParams(entityType, params);
     }
+
+    public List<T> findTeacherCoursesById(Class<T> entityType, int teacherId) throws Exception {
+        return connection.findTeacherCoursesById(entityType, teacherId);
+    }
+
+    public T findById(Class<T> subjectClass, int courseId) throws Exception {
+        return connection.findById(subjectClass, courseId);
+    }
+
+    public List<T> findAllStudents(Class<T> entityType, String userType) throws Exception {
+        return connection.findAllStudents(entityType, userType);
+    }
+
+    public List<T> findAllGrades(Class<T> entityType) throws Exception {
+        return connection.findAllGrades(entityType);
+    }
 }

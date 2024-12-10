@@ -59,7 +59,56 @@ public class DatabaseConnection extends Connection {
         return query.getResultList();
     }
 
-    public <T extends PersistableEntity> T findById(Class<T> entityType, Long id){
+    @Override
+    public <T extends PersistableEntity> List<T> findAllGrades(Class<T> entityType) throws Exception {
+        String query = "SELECT g FROM Grade g " +
+                "JOIN FETCH g.studentSubject ss " +
+                "JOIN FETCH ss.student s " +
+                "JOIN FETCH ss.subject sub " +
+                "WHERE g.active = TRUE";
+
+        TypedQuery<T> gradeQuery = this.dbConnAbs.executeQueryTransaction(entityManager ->
+                entityManager.createQuery(query, entityType), TypedQuery.class);
+
+        return gradeQuery.getResultList();
+    }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllStudents(Class<T> entityType, String userType) throws Exception {
+        // Define the base JPQL query
+        String baseQuery = "SELECT u FROM %s u WHERE ".formatted(entityType.getSimpleName());
+        String whereClause = "u.userType = :userType";
+        String finalQuery = baseQuery + whereClause;
+
+        // Execute the query transaction
+        TypedQuery<T> query = this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> typedQuery = entityManager.createQuery(finalQuery, entityType);
+            typedQuery.setParameter("userType", userType);
+            return typedQuery;
+        }, TypedQuery.class);
+
+        // Return the result list
+        return query.getResultList();
+    }
+
+
+    @Override
+    public <T extends PersistableEntity> List<T> findTeacherCoursesById(Class<T> entityType, int teacherId) throws Exception {
+
+        String baseQuery = "SELECT s FROM %s s WHERE ".formatted(entityType.getSimpleName());
+        String whereClause = "s.teacher.id = :teacherId AND s.active = TRUE";
+        String finalQuery = baseQuery + whereClause;
+
+        TypedQuery<T> query = this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> typedQuery = entityManager.createQuery(finalQuery, entityType);
+            typedQuery.setParameter("teacherId", teacherId);
+            return typedQuery;
+        }, TypedQuery.class);
+
+        return query.getResultList();
+    }
+
+    public <T extends PersistableEntity> T findById(Class<T> entityType, int id){
         T entity = this.dbConnAbs.executeQueryTransaction(entityManager ->
                         entityManager.find(entityType, id), entityType);
         return entity;

@@ -18,6 +18,7 @@
                 </li>
             </c:forEach>
         </ul>
+        <a href="homeServlet" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded">Cancel</a>
     </div>
 </div>
 </body>
