@@ -2,7 +2,7 @@ package com.example.demo.persistence.connection.database;
 
 import com.example.demo.persistence.connection.Connection;
 import com.example.demo.persistence.connection.ParameterPair;
-import com.example.demo.persistence.entities.PersistableEntity;
+import com.example.demo.persistence.entities.*;
 import jakarta.persistence.*;
 
 import java.io.IOException;
@@ -22,6 +22,73 @@ public class DatabaseConnection extends Connection {
     }
 
     @Override
+    public <T extends PersistableEntity> List<T> findAllGradesByStudentId(Class<T> entityType, int studentId) throws Exception {
+        if (!Grade.class.isAssignableFrom(entityType)) {
+            throw new IllegalArgumentException("Entity type must be a Grade or its subclass.");
+        }
+
+        String jpql = "SELECT g FROM Grade g WHERE g.studentSubject.student.id = :studentId AND g.active = TRUE";
+        return this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> query = entityManager.createQuery(jpql, entityType);
+            query.setParameter("studentId", studentId);
+            return query.getResultList();
+        }, List.class);
+    }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllGradesBySubjectId(Class<T> entityType, int subjectId) throws Exception {
+        if (!Grade.class.isAssignableFrom(entityType)) {
+            throw new IllegalArgumentException("Entity type must be a Grade or its subclass.");
+        }
+
+        // Define the JPQL query to fetch grades linked to a specific subject through the StudentsSubject entity
+        String jpql = "SELECT g FROM Grade g WHERE g.studentSubject.subject.id = :subjectId AND g.active = TRUE";
+        return this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> query = entityManager.createQuery(jpql, entityType);
+            query.setParameter("subjectId", subjectId);
+            return query.getResultList();
+        }, List.class);
+    }
+
+
+    @Override
+    public <T extends PersistableEntity> void delete(T entity) throws Exception {
+        this.dbConnAbs.executeTransaction(entityManager -> {
+            if (entity instanceof Subject) {
+                Subject subject = (Subject) entity;
+                // Deactivate all linked StudentsSubjects entries
+                try {
+                    findAllSubjectStudentsBySubjectId(StudentsSubject.class, ((Subject) entity).getTeacher().getId()).forEach(ss -> {
+                         ss.setActive(false);
+                         entityManager.merge(ss);
+                        try {
+                            List<Grade> gradesList = findAllGradesByStudentId(Grade.class, ((Subject) entity).getTeacher().getId());
+                            for (Grade grade : gradesList)
+                            {
+                                grade.setActive(false);
+                                entityManager.merge(grade);
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+
+                     });
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                // Now deactivate the subject itself
+                subject.setActive(false);
+                entityManager.merge(subject);
+            } else if (entity instanceof Grade) {
+                Grade grade = (Grade) entity;
+            } else {
+                throw new IllegalArgumentException("Unsupported entity type for delete operation");
+            }
+        });
+    }
+
+
+    @Override
     public <T extends PersistableEntity> void save(T entity) throws Exception {
         /* Before Abstraction */
         //EntityTransaction transaction = entityManager.getTransaction();
@@ -29,6 +96,27 @@ public class DatabaseConnection extends Connection {
         //entityManager.persist(entity);
         //transaction.commit();
         this.dbConnAbs.executeTransaction(entityManager -> entityManager.persist(entity));
+    }
+
+    @Override
+    public Subject findBySubjectByName(String subjectName) throws Exception {
+        // Define the base JPQL query specifically for the Subject entity
+        String jpql = "SELECT s FROM Subject s WHERE s.subjectName = :subjectName AND s.active = TRUE";
+
+        // Execute the query transaction
+        return this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            // Create and configure a TypedQuery for the Subject entity
+            TypedQuery<Subject> query = entityManager.createQuery(jpql, Subject.class);
+            query.setParameter("subjectName", subjectName);  // Set the parameter for the subject name
+            query.setMaxResults(1);  // Ensure only the first matching result is considered
+            try {
+                // Execute the query and return the single result or null if no result found
+                return query.getSingleResult();
+            } catch (NoResultException e) {
+                // Return null if no Subject is found with the given name
+                return null;
+            }
+        }, Subject.class);  // The executeQueryTransaction method needs to handle and cast the return type
     }
 
     @Override
@@ -164,6 +252,42 @@ public class DatabaseConnection extends Connection {
         // Return the full result list
         return query.getResultList();
     }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllSubjectStudentsBySubjectId(Class<T> entityType, int subjectId) throws Exception {
+        return List.of();
+    }
+
+    public <T extends PersistableEntity> List<T> findAllSubjectStudentsBySubjectId(EntityManager entityManager, Class<T> entityType, int subjectId) throws Exception {
+        String baseQuery = "SELECT ss FROM %s ss WHERE ".formatted(entityType.getSimpleName());
+        String whereClause = "ss.subject.id = :subjectId AND ss.active = TRUE";
+        String finalQuery = baseQuery + whereClause;
+        TypedQuery<T> typedQuery = entityManager.createQuery(finalQuery, entityType);
+        typedQuery.setParameter("subjectId", subjectId);
+        return typedQuery.getResultList();
+    }
+
+
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllSubjectStudentsByStudentId(Class<T> entityType, int studentId) throws Exception {
+        // Define the base JPQL query
+        String baseQuery = "SELECT ss FROM %s ss WHERE ".formatted(entityType.getSimpleName());
+        String whereClause = "ss.student.id = :studentId AND ss.active = TRUE";  // Filter by studentId and active status
+        String finalQuery = baseQuery + whereClause;
+
+        // Execute the query transaction
+        TypedQuery<T> query = this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> typedQuery = entityManager.createQuery(finalQuery, entityType);
+            typedQuery.setParameter("studentId", studentId);
+            return typedQuery;
+        }, TypedQuery.class);
+
+        // Return the result list
+        return query.getResultList();
+    }
+
+
 
     @Override
     public void close() throws IOException {

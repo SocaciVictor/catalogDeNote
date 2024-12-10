@@ -10,7 +10,7 @@
     <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">Course List</h1>
 
     <!-- Form for adding a new course -->
-    <form action="addCourse" method="post" class="mb-4">
+    <form action="myCourses" method="post" class="mb-4">
         <div class="mb-4">
             <input type="text" name="subjectName" placeholder="Subject name" required class="text-sm py-1 px-2 rounded border-gray-300 w-full">
         </div>

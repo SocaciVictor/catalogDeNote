@@ -25,16 +25,22 @@ public class DatabaseConnectionAbstract {
     }
 
     public void executeTransaction(Consumer<EntityManager> action) {
-        EntityTransaction entityTransaction = entityManager.getTransaction();
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            entityTransaction.begin();
-            action.accept(entityManager);
-            entityTransaction.commit();
-        } catch (RuntimeException e) {
-            System.err.println("Transaction error: " + e.getLocalizedMessage());
-            entityTransaction.rollback();
+            tx.begin();
+            action.accept(em);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            throw new RuntimeException("Transaction error: " + e.getMessage(), e);
+        } finally {
+            em.close();
         }
     }
+
 
     public <T,R> R executeQueryTransaction(Function<EntityManager, T> action, Class<R> result) {
         EntityTransaction entityTransaction = entityManager.getTransaction();

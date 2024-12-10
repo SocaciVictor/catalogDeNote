@@ -24,6 +24,11 @@ public class FileSerializeConnection extends Connection {
     }
 
     @Override
+    public <T extends PersistableEntity> T findBySubjectByName(String subjectName) throws Exception {
+        return null;
+    }
+
+    @Override
     public <T extends PersistableEntity> List<T> findAll(Class<T> entityType) throws Exception {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
             return (List<T>) in.readObject();
@@ -73,6 +78,31 @@ public class FileSerializeConnection extends Connection {
         return entities.stream()
                 .filter(entity -> matchesParams(entity, params))
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllSubjectStudentsBySubjectId(Class<T> entityType, int subjectId) throws Exception {
+        return List.of();
+    }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllSubjectStudentsByStudentId(Class<T> entityType, int studentId) throws Exception {
+        return List.of();
+    }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllGradesByStudentId(Class<T> entityType, int studentId) throws Exception {
+        return List.of();
+    }
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllGradesBySubjectId(Class<T> entityType, int subjectId) throws Exception {
+        return List.of();
+    }
+
+    @Override
+    public <T extends PersistableEntity> void delete(T entity) throws Exception {
+
     }
 
     @Override

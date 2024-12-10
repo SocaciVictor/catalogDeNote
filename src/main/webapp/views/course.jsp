@@ -26,7 +26,7 @@
                 <select multiple name="students" class="block w-full border bg-white rounded py-2 px-3 shadow leading-tight focus:outline-none focus:shadow-outline">
                     <!-- Assuming the servlet prepares a list of enrolled students -->
                     <c:forEach items="${enrolledStudents}" var="student">
-                        <option value="${subject.id}">${subject.subjectName}</option>
+                        <option value="${student.id}">${student.name}</option>
                     </c:forEach>
                 </select>
             </div>
