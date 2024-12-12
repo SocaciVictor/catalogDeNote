@@ -39,8 +39,8 @@ public class GradesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             List<Grade> grades = gradeDao.findAllGrades(Grade.class);
-            List<Subject> subjects = subjectDao.findTeacherCoursesById(Subject.class, (int) req.getSession().getAttribute("currentUser"));
-            List<User> users = userDao.findAllStudents(User.class, "student");
+            List<Subject> subjects = subjectDao.findTeacherCoursesById(Subject.class, (int) req.getSession().getAttribute("currentUser").getClass().getMethod("getId").invoke(req.getSession().getAttribute("currentUser")));
+            List<User> users = userDao.findAllStudentsByTeacherId(User.class, (int) req.getSession().getAttribute("currentUser").getClass().getMethod("getId").invoke(req.getSession().getAttribute("currentUser")));
             req.setAttribute("grades", grades);
             req.setAttribute("subjects", subjects);
             req.setAttribute("students", users);
@@ -51,34 +51,6 @@ public class GradesServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
 
-        if ("add".equals(action)) {
-            addGrade(req, resp);
-        } else if ("update".equals(action)) {
-            updateGrade(req, resp);
-        } else if ("delete".equals(action)) {
-            deleteGrade(req, resp);
-        } else {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action");
-        }
-    }
-
-    private void addGrade(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Implementation for adding a new grade
-        // Extract grade details from request, validate, and save to database
-    }
-
-    private void updateGrade(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Implementation for updating an existing grade
-        // Extract updated details, validate, find the grade by ID, and update
-    }
-
-    private void deleteGrade(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Implementation for deleting a grade
-        // Get the grade ID from request, validate, and delete from database
-    }
 }
 

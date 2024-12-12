@@ -36,6 +36,9 @@ public class EntityDao<T extends PersistableEntity> {
     public T findById(Class<T> subjectClass, int courseId) throws Exception {
         return connection.findById(subjectClass, courseId);
     }
+    public T findByStudentIdAndSubjectId(int studentId ,int subjectId) throws Exception {
+        return connection.findByStudentIdAndSubjectId(studentId, subjectId);
+    }
 
     public List<T> findAllStudents(Class<T> entityType, String userType) throws Exception {
         return connection.findAllStudents(entityType, userType);
@@ -45,11 +48,34 @@ public class EntityDao<T extends PersistableEntity> {
         return connection.findAllGrades(entityType);
     }
 
-    public void delete(T entity) throws Exception {
-        connection.delete(entity);
+    public void delete(int subjectId) throws Exception {
+        connection.deleteSubject(subjectId);
     }
 
     public Subject findBySubjectByName(String subjectName) throws Exception {
         return connection.findBySubjectByName(subjectName);
+    }
+
+    public void addSubject(String subjectName, int teacherId,int[] studentIds) throws Exception {
+        connection.addSubject(subjectName, teacherId, studentIds);
+    }
+
+    public List<T> findAllStudentsByTeacherId(Class<T> entitype, int teacherId) throws Exception {
+        return connection.findAllStudentsByTeacherId(entitype, teacherId);
+    }
+
+    public void addGrade(T grade) throws Exception {
+        connection.addGrade(grade);
+    }
+
+    public void deleteGrade(T gradeEntity) throws Exception {
+        connection.deleteGrade(gradeEntity);
+    }
+
+    public void editGrade(T grade) throws Exception {
+        connection.editGrade(grade);
+    }
+    public void editSubject(int subjectId, String newSubjectName, int[] studentIds) throws Exception{
+        connection.editSubject(subjectId, newSubjectName, studentIds);
     }
 }

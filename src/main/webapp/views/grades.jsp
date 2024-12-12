@@ -9,28 +9,8 @@
 <div class="container mx-auto px-4">
     <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">Grades Overview</h1>
 
-    <!-- Form for adding a new grade -->
-    <form action="addGrade" method="post" class="mb-4">
-        <label>
-            <select multiple name="subjects" class="block w-full border bg-white rounded py-2 px-3 shadow leading-tight focus:outline-none focus:shadow-outline">
-                <!-- Assuming the servlet prepares a list of enrolled students -->
-                <c:forEach items="${subjects}" var="subject">
-                    <option value="${subject.id}">${subject.subjectName}</option>
-                </c:forEach>
-            </select>
-        </label>
-        <label>
-            <select multiple name="subjects" class="block w-full border bg-white rounded py-2 px-3 shadow leading-tight focus:outline-none focus:shadow-outline">
-                <!-- Assuming the servlet prepares a list of enrolled students -->
-                <c:forEach items="${students}" var="student">
-                    <option value="${student.id}">${student.name}</option>
-                </c:forEach>
-            </select>
-        </label>
-        <input type="text" name="gradeValue" placeholder="Grade Value" required>
-        <button type="submit" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">Add Grade</button>
-        <a href="homeServlet" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded">Cancel</a>
-    </form>
+    <a href="manageGrade?action=add" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-2">Add</a>
+    <a href="homeServlet" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded">Cancel</a>
 
     <div class="flex flex-col">
         <c:forEach items="${grades}" var="grade">

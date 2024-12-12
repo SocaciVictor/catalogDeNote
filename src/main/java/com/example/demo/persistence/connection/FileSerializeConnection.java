@@ -43,6 +43,11 @@ public class FileSerializeConnection extends Connection {
     }
 
     @Override
+    public <T extends PersistableEntity> List<T> findAllStudentsByTeacherId(Class<T> entityType, int teacherId) throws Exception {
+        return List.of();
+    }
+
+    @Override
     public <T extends PersistableEntity> List<T> findAllStudents(Class<T> entityType, String userType) throws Exception {
         return List.of();
     }
@@ -101,8 +106,45 @@ public class FileSerializeConnection extends Connection {
     }
 
     @Override
+    public <T extends PersistableEntity> void deleteSubject(int subjectId) throws Exception {
+
+    }
+
+    @Override
+    public <T extends PersistableEntity> T findByStudentIdAndSubjectId(int studentId, int subjectId) throws Exception {
+        return null;
+    }
+
+    @Override
     public <T extends PersistableEntity> void delete(T entity) throws Exception {
 
+    }
+
+    @Override
+    public <T extends PersistableEntity> void addGrade(T grade) throws Exception {
+
+    }
+
+    @Override
+    public <T extends PersistableEntity> void deleteGrade(T grade) throws Exception {
+
+    }
+
+    @Override
+    public <T extends PersistableEntity> void editGrade(T grade) throws Exception {
+
+    }
+
+    @Override
+    public <T extends PersistableEntity> void editSubject(int subjectId, String newSubjectName, int[] studentsId) throws Exception {
+
+    }
+
+
+
+    @Override
+    public <T extends PersistableEntity> void addSubject(String subjectName, int teacherId, int[] studentIds) throws Exception {
+        super.addSubject(subjectName, teacherId, studentIds);
     }
 
     @Override
@@ -132,5 +174,10 @@ public class FileSerializeConnection extends Connection {
             return false; // If there's an error accessing the field, assume no match
         }
         return true; // All parameters matched
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

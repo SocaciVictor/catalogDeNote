@@ -9,14 +9,6 @@
 <div class="w-full max-w-2xl p-5">
     <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">Course List</h1>
 
-    <!-- Form for adding a new course -->
-    <form action="myCourses" method="post" class="mb-4">
-        <div class="mb-4">
-            <input type="text" name="subjectName" placeholder="Subject name" required class="text-sm py-1 px-2 rounded border-gray-300 w-full">
-        </div>
-        <button type="submit" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded w-full">Add Course</button>
-    </form>
-
     <!-- Displaying the list of courses -->
     <div class="flex flex-col">
         <c:forEach items="${subjects}" var="subject">
@@ -29,6 +21,7 @@
             </div>
         </c:forEach>
     </div>
+    <a href="manageCourse?action=add" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded w-full">Add Course</a>
     <a href="homeServlet" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded mt-4">Back to Home</a>
 </div>
 </body>

@@ -6,18 +6,15 @@ import com.example.demo.persistence.entities.*;
 import jakarta.persistence.*;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DatabaseConnection extends Connection {
-    //private EntityManager entityManager;
-    //private EntityManagerFactory entityManagerFactory;
     private DatabaseConnectionAbstract dbConnAbs;
 
     public DatabaseConnection(String persistenceUnit) {
-        //entityManagerFactory = Persistence.createEntityManagerFactory(persistenceUnit);
-        //entityManager = entityManagerFactory.createEntityManager();
         this.dbConnAbs = new DatabaseConnectionAbstract(persistenceUnit);
     }
 
@@ -52,49 +49,145 @@ public class DatabaseConnection extends Connection {
 
 
     @Override
-    public <T extends PersistableEntity> void delete(T entity) throws Exception {
-        this.dbConnAbs.executeTransaction(entityManager -> {
-            if (entity instanceof Subject) {
-                Subject subject = (Subject) entity;
-                // Deactivate all linked StudentsSubjects entries
-                try {
-                    findAllSubjectStudentsBySubjectId(StudentsSubject.class, ((Subject) entity).getTeacher().getId()).forEach(ss -> {
-                         ss.setActive(false);
-                         entityManager.merge(ss);
-                        try {
-                            List<Grade> gradesList = findAllGradesByStudentId(Grade.class, ((Subject) entity).getTeacher().getId());
-                            for (Grade grade : gradesList)
-                            {
-                                grade.setActive(false);
-                                entityManager.merge(grade);
-                            }
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+    public <T extends PersistableEntity> void deleteSubject(int subjectId) throws Exception {
+        try {
+            dbConnAbs.executeStoredProcedure("deactivate_subject_and_related_entities", subjectId);
+            System.out.println("Subject deactivated successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to deactivate subject: " + e.getMessage());
+        }
+    }
 
-                     });
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                // Now deactivate the subject itself
-                subject.setActive(false);
-                entityManager.merge(subject);
-            } else if (entity instanceof Grade) {
-                Grade grade = (Grade) entity;
-            } else {
-                throw new IllegalArgumentException("Unsupported entity type for delete operation");
+    @Override
+    public <T extends PersistableEntity> void delete(T entity) throws Exception {
+
+    }
+
+    @Override
+    public <T extends PersistableEntity> void editGrade(T grade) throws Exception {
+        if (!(grade instanceof Grade)) {
+            throw new IllegalArgumentException("Entity must be of type Grade");
+        }
+
+        dbConnAbs.executeTransaction(em -> {
+            Grade gradeEntity = (Grade) grade;
+
+            // Fetch the existing Grade from the database
+            Grade existingGrade = em.find(Grade.class, gradeEntity.getId());
+            if (existingGrade == null || !existingGrade.getActive()) {
+                throw new IllegalStateException("Grade must exist and be active to edit.");
             }
+
+            // Update fields (e.g., gradeValue)
+            existingGrade.setGradeValue(gradeEntity.getGradeValue());
+            existingGrade.setAddedDate(new Timestamp(System.currentTimeMillis()));
+
+            // Persist changes
+            em.merge(existingGrade);
+
+            em.flush();
         });
     }
 
 
     @Override
+    public <T extends PersistableEntity> void deleteGrade(T grade) throws Exception {
+        if (!(grade instanceof Grade)) {
+            throw new IllegalArgumentException("Entity must be of type Grade");
+        }
+
+        dbConnAbs.executeTransaction(em -> {
+            Grade gradeEntity = (Grade) grade;
+
+            // Fetch the existing Grade from the database
+            Grade existingGrade = em.find(Grade.class, gradeEntity.getId());
+            if (existingGrade == null || !existingGrade.getActive()) {
+                throw new IllegalStateException("Grade must exist and be active to delete.");
+            }
+
+            // Soft delete: Mark the grade as inactive
+            existingGrade.setActive(false);
+
+            // Persist changes
+            em.merge(existingGrade);
+        });
+    }
+
+
+    @Override
+    public <T extends PersistableEntity> T findByStudentIdAndSubjectId(int studentId, int subjectId) throws Exception {
+        String jpql = "SELECT g FROM StudentsSubject g WHERE g.student.id = :studentId AND g.subject.id = :subjectId AND g.active = TRUE";
+        return (T) this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            try {
+                // Define a TypedQuery for StudentsSubject
+                TypedQuery<StudentsSubject> query = entityManager.createQuery(jpql, StudentsSubject.class);
+                query.setParameter("studentId", studentId);
+                query.setParameter("subjectId", subjectId);
+
+                // Retrieve a single result
+                return query.getSingleResult();
+            } catch (NoResultException e) {
+                // Handle the case when no result is found
+                return null;
+            }
+        }, StudentsSubject.class);
+    }
+
+
+    @Override
+    public <T extends PersistableEntity> void addGrade(T grade) throws Exception {
+        if (!(grade instanceof Grade)) {
+            throw new IllegalArgumentException("Entity must be of type Grade");
+        }
+
+        dbConnAbs.executeTransaction(em -> {
+            Grade gradeEntity = (Grade) grade;
+
+            // Ensure the StudentsSubject relationship exists
+            StudentsSubject studentsSubject = gradeEntity.getStudentSubject();
+            if (studentsSubject == null || studentsSubject.getId() == null) {
+                throw new IllegalArgumentException("StudentsSubject must be provided with a valid ID.");
+            }
+
+            em.persist(studentsSubject);
+            // Link the Grade to the existing StudentsSubject
+            gradeEntity.setStudentSubject(studentsSubject);
+
+            // Set additional fields
+            gradeEntity.setAddedDate(new Timestamp(System.currentTimeMillis()));
+            gradeEntity.setActive(true);
+
+            // Persist the grade
+
+            em.persist(gradeEntity);
+        });
+    }
+
+
+    @Override
+    public <T extends PersistableEntity> List<T> findAllStudentsByTeacherId(Class<T> entityType, int teacherId) throws Exception {
+        String jpql = "SELECT DISTINCT s.student FROM StudentsSubject s WHERE s.subject.teacher.id = :teacherId";
+
+        TypedQuery<T> query = this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> typedQuery = entityManager.createQuery(jpql, entityType);
+            typedQuery.setParameter("teacherId", teacherId);
+            return typedQuery;
+        }, TypedQuery.class);
+        return query.getResultList();
+    }
+
+    @Override
+    public <T extends PersistableEntity> void addSubject(String subjectName, int teacherId,int[] studentIds) throws Exception {
+        try {
+            dbConnAbs.executeStoredProcedure("add_or_activate_subject", subjectName, teacherId, studentIds);
+            System.out.println("Subject added successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to deactivate subject: " + e.getMessage());
+        }
+    }
+
+    @Override
     public <T extends PersistableEntity> void save(T entity) throws Exception {
-        /* Before Abstraction */
-        //EntityTransaction transaction = entityManager.getTransaction();
-        //transaction.begin();
-        //entityManager.persist(entity);
-        //transaction.commit();
         this.dbConnAbs.executeTransaction(entityManager -> entityManager.persist(entity));
     }
 
@@ -121,22 +214,6 @@ public class DatabaseConnection extends Connection {
 
     @Override
     public <T extends PersistableEntity> List<T> findAll(Class<T> entityType) throws Exception {
-        /* Before Abstraction */
-        //List<T> result = new ArrayList<>();
-        //EntityTransaction transaction = entityManager.getTransaction();
-        //String abstractQuery = "SELECT e FROM %s e".formatted(entityType.getSimpleName());
-        //try {
-        //    transaction.begin();
-        //    TypedQuery<T> query = entityManager
-        //            .createQuery(abstractQuery, entityType);
-        //    result = query.getResultList();
-        //    transaction.commit();
-        //} catch (RuntimeException e) {
-        //    System.err.println("Transaction error: " + e.getLocalizedMessage());
-        //    /* revert the transaction */
-        //    transaction.rollback();
-        //}
-        //return result;
 
         String abstractQuery = "SELECT e FROM %s e".formatted(entityType.getSimpleName());
 
@@ -148,6 +225,16 @@ public class DatabaseConnection extends Connection {
     }
 
     @Override
+    public <T extends PersistableEntity> void editSubject(int subjectId, String newSubjectName, int[] studentsId) throws Exception {
+        try {
+            dbConnAbs.executeStoredProcedure("deactivate_subject_and_related_entities", subjectId, newSubjectName, studentsId);
+            System.out.println("Subject edit successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to deactivate subject: " + e.getMessage());
+        }
+    }
+
+    @Override
     public <T extends PersistableEntity> List<T> findAllGrades(Class<T> entityType) throws Exception {
         String query = "SELECT g FROM Grade g " +
                 "JOIN FETCH g.studentSubject ss " +
@@ -155,10 +242,11 @@ public class DatabaseConnection extends Connection {
                 "JOIN FETCH ss.subject sub " +
                 "WHERE g.active = TRUE";
 
-        TypedQuery<T> gradeQuery = this.dbConnAbs.executeQueryTransaction(entityManager ->
-                entityManager.createQuery(query, entityType), TypedQuery.class);
-
-        return gradeQuery.getResultList();
+        return this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            TypedQuery<T> gradeQuery = entityManager.createQuery(query, entityType);
+            gradeQuery.setHint("javax.persistence.cache.storeMode", "REFRESH"); // Fetch fresh data
+            return gradeQuery.getResultList();
+        }, List.class);
     }
 
     @Override
@@ -187,7 +275,11 @@ public class DatabaseConnection extends Connection {
         String whereClause = "s.teacher.id = :teacherId AND s.active = TRUE";
         String finalQuery = baseQuery + whereClause;
 
+
+
         TypedQuery<T> query = this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            entityManager.clear();
+            entityManager.flush();
             TypedQuery<T> typedQuery = entityManager.createQuery(finalQuery, entityType);
             typedQuery.setParameter("teacherId", teacherId);
             return typedQuery;
@@ -258,14 +350,6 @@ public class DatabaseConnection extends Connection {
         return List.of();
     }
 
-    public <T extends PersistableEntity> List<T> findAllSubjectStudentsBySubjectId(EntityManager entityManager, Class<T> entityType, int subjectId) throws Exception {
-        String baseQuery = "SELECT ss FROM %s ss WHERE ".formatted(entityType.getSimpleName());
-        String whereClause = "ss.subject.id = :subjectId AND ss.active = TRUE";
-        String finalQuery = baseQuery + whereClause;
-        TypedQuery<T> typedQuery = entityManager.createQuery(finalQuery, entityType);
-        typedQuery.setParameter("subjectId", subjectId);
-        return typedQuery.getResultList();
-    }
 
 
 

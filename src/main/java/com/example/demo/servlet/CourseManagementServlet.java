@@ -14,7 +14,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "CourseManagementServlet", urlPatterns = {"/manageCourse"})
 public class CourseManagementServlet extends HttpServlet {
@@ -38,54 +40,70 @@ public class CourseManagementServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
-        int courseId = Integer.parseInt(req.getParameter("id"));
 
-        try {
-            Subject subject = subjectDao.findById(Subject.class, courseId);
+
+        if (action.equals("update")){
+            try {
+                int courseId = Integer.parseInt(req.getParameter("id"));
+                Subject subject = subjectDao.findById(Subject.class, courseId);
+                req.setAttribute("subject", subject);
+                req.setAttribute("enrolledStudents", userDao.findAllStudents(User.class, "student"));
+                req.setAttribute("action", action);
+                req.getRequestDispatcher("/views/course.jsp").forward(req, resp);
+            } catch (Exception e) {
+                e.printStackTrace();
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching course details");
+            }
+        }else if (action.equals("add")){
+            try {
+                req.setAttribute("enrolledStudents", userDao.findAllStudents(User.class, "student"));
+                req.setAttribute("action", action);
+                req.getRequestDispatcher("/views/course.jsp").forward(req, resp);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else if (action.equals("delete")) {
+            int courseId = Integer.parseInt(req.getParameter("id"));
+            Subject subject = null;
+            try {
+                subject = subjectDao.findById(Subject.class, courseId);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             req.setAttribute("subject", subject);
-            req.setAttribute("enrolledStudents", userDao.findAllStudents(User.class, "student"));
             req.setAttribute("action", action);
             req.getRequestDispatcher("/views/course.jsp").forward(req, resp);
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching course details");
         }
     }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
-        int courseId = Integer.parseInt(req.getParameter("id"));
-
-
+        String subjectName = req.getParameter("subjectName");
         try {
             if ("update".equals(action)) {
-                // Fetch the current subject and update its name
-                Subject subject = subjectDao.findById(Subject.class, courseId);
-                subject.setSubjectName(req.getParameter("subjectName"));
-               // subjectDao.update(subject);
+                int courseId = Integer.parseInt(req.getParameter("id"));
 
-                // Update enrolled students:
-                // Step 1: Clear existing enrollments for this course
-//                List<StudentsSubject> enrollments = studentsSubjectDao.findAllByCourseId(User.class,courseId);
-//                for (StudentsSubject enrollment : enrollments) {
-//                    studentsSubjectDao.delete(enrollment);
-//                }
-
-                // Step 2: Add new enrollments based on selected students in the form
                 String[] studentIds = req.getParameterValues("students");
-                if (studentIds != null) {
-                    for (String studentId : studentIds) {
-                        StudentsSubject newEnrollment = new StudentsSubject();
-                        newEnrollment.setStudent(userDao.findById(User.class, Integer.parseInt(studentId)));
-                        newEnrollment.setSubject(subject);
-                     //  studentsSubjectDao.create(newEnrollment);
-                    }
-                }
-
+                int[] studentIdsInt = Arrays.stream(studentIds)
+                        .mapToInt(Integer::parseInt)
+                        .toArray();
+                subjectDao.editSubject(courseId, subjectName, studentIdsInt);
                 resp.sendRedirect("myCourses");
             } else if ("delete".equals(action)) {
+                int courseId = Integer.parseInt(req.getParameter("id"));
                 Subject subject = subjectDao.findById(Subject.class, courseId);
-                subjectDao.delete(subject);
+                subjectDao.delete(courseId);
+                resp.sendRedirect("myCourses");
+            }else if ("add".equals(action)) {
+                String[] studentIds = req.getParameterValues("students");
+                int[] studentIdsInt = new int[studentsSubjectDao.findAll(StudentsSubject.class).size()];
+                int teacherId = (int) req.getSession().getAttribute("currentUser").getClass().getMethod("getId").invoke(req.getSession().getAttribute("currentUser"));
+                if (studentIds != null) {
+                    studentIdsInt = Arrays.stream(studentIds)
+                            .mapToInt(Integer::parseInt)
+                            .toArray();
+                }
+                subjectDao.addSubject(subjectName, teacherId, studentIdsInt);
                 resp.sendRedirect("myCourses");
             }
         } catch (Exception e) {
