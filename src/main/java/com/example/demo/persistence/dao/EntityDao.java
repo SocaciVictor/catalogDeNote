@@ -78,4 +78,8 @@ public class EntityDao<T extends PersistableEntity> {
     public void editSubject(int subjectId, String newSubjectName, int[] studentIds) throws Exception{
         connection.editSubject(subjectId, newSubjectName, studentIds);
     }
+
+    public List<T> findSubjectByStudentId(int studentId) throws Exception {
+        return connection.findAllSubjectByStudentId(studentId);
+    }
 }

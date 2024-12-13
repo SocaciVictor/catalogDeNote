@@ -96,6 +96,11 @@ public class FileSerializeConnection extends Connection {
     }
 
     @Override
+    public <T extends PersistableEntity> List<T> findAllSubjectByStudentId(int studentId) throws Exception {
+        return List.of();
+    }
+
+    @Override
     public <T extends PersistableEntity> List<T> findAllGradesByStudentId(Class<T> entityType, int studentId) throws Exception {
         return List.of();
     }

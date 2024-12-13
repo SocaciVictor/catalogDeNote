@@ -269,6 +269,19 @@ public class DatabaseConnection extends Connection {
 
 
     @Override
+    public <T extends PersistableEntity> List<T> findAllSubjectByStudentId(int studentId) throws Exception {
+        String jpql = "SELECT s.subject FROM StudentsSubject s WHERE s.student.id = :studentId AND s.active = TRUE";
+
+        // Execute the query transaction
+        return this.dbConnAbs.executeQueryTransaction(entityManager -> {
+            // Create and configure a TypedQuery for Subject entities
+            TypedQuery<Subject> query = entityManager.createQuery(jpql, Subject.class);
+            query.setParameter("studentId", studentId);
+            return query.getResultList();
+        }, List.class);
+    }
+
+    @Override
     public <T extends PersistableEntity> List<T> findTeacherCoursesById(Class<T> entityType, int teacherId) throws Exception {
 
         String baseQuery = "SELECT s FROM %s s WHERE ".formatted(entityType.getSimpleName());

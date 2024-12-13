@@ -18,6 +18,7 @@ public abstract class Connection implements Closeable {
     public abstract <T extends PersistableEntity> List<T> findAllByParams(Class<T> entityType, ParameterPair ... params) throws Exception;
     public abstract <T extends PersistableEntity> List<T> findAllSubjectStudentsBySubjectId(Class<T> entityType, int subjectId) throws Exception;
     public abstract <T extends PersistableEntity> List<T> findAllSubjectStudentsByStudentId(Class<T> entityType, int studentId) throws Exception;
+    public abstract <T extends PersistableEntity> List<T> findAllSubjectByStudentId(int studentId) throws Exception;
     public abstract <T extends PersistableEntity> List<T> findAllGradesByStudentId(Class<T> entityType, int studentId) throws Exception;
     public abstract <T extends PersistableEntity> List<T> findAllGradesBySubjectId(Class<T> entityType, int subjectId) throws Exception;
     public abstract  <T extends PersistableEntity> T findByStudentIdAndSubjectId(int studentId, int subjectId) throws Exception;

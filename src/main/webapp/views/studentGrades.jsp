@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
 <div class="container max-w-4xl mx-auto p-8 bg-white rounded-lg shadow">
-    <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">Enrolled Courses</h1>
+    <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">Grades</h1>
 
     <table class="min-w-full bg-white border rounded-lg">
         <thead>
