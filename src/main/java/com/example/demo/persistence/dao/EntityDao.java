@@ -82,4 +82,8 @@ public class EntityDao<T extends PersistableEntity> {
     public List<T> findSubjectByStudentId(int studentId) throws Exception {
         return connection.findAllSubjectByStudentId(studentId);
     }
+
+    public List<T> findAllGradesByStudentId(Class<T> entityType, int studentId) throws Exception {
+        return connection.findAllGradesByStudentId(entityType, studentId);
+    }
 }

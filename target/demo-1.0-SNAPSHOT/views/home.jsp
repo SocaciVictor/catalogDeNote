@@ -28,7 +28,7 @@
             <a href="studentCourses" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">My Courses</a>
         </button>
         <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-            My Grades
+            <a href="studentGrades" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">My Grades</a>
         </button>
     </div>
     <% } %>
