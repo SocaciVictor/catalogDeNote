@@ -46,4 +46,13 @@ public class StudentCourses extends HttpServlet {
             throw new ServletException("Error initializing MyCoursesServlet", e);
         }
     }
+
+    @Override
+    public void destroy() {
+        try {
+            this.dbConnection.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

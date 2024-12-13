@@ -46,7 +46,6 @@ public class DatabaseConnectionAbstract {
 
         try {
             entityTransaction.begin();
-            entityManager.flush();
             queryResult = action.apply(entityManager);
             entityTransaction.commit();
         } catch (RuntimeException e) {

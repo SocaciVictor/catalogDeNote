@@ -112,6 +112,15 @@ public class CourseManagementServlet extends HttpServlet {
         }
     }
 
+
+    @Override
+    public void destroy() {
+        try {
+            this.dbConnection.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 

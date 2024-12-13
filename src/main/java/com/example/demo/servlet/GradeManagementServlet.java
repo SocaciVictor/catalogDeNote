@@ -126,4 +126,13 @@ public class GradeManagementServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Error processing request: " + e.getMessage());
         }
     }
+
+    @Override
+    public void destroy() {
+        try {
+            this.dbConnection.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
