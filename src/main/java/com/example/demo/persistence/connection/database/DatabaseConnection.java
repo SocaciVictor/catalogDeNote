@@ -149,7 +149,6 @@ public class DatabaseConnection extends Connection {
                 throw new IllegalArgumentException("StudentsSubject must be provided with a valid ID.");
             }
 
-            em.persist(studentsSubject);
             // Link the Grade to the existing StudentsSubject
             gradeEntity.setStudentSubject(studentsSubject);
 

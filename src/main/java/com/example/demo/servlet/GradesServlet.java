@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 @WebServlet(name = "GradesServlet", urlPatterns = "/grades")
@@ -37,10 +38,18 @@ public class GradesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String sort = req.getParameter("sort");
         try {
             List<Grade> grades = gradeDao.findAllGrades(Grade.class);
             List<Subject> subjects = subjectDao.findTeacherCoursesById(Subject.class, (int) req.getSession().getAttribute("currentUser").getClass().getMethod("getId").invoke(req.getSession().getAttribute("currentUser")));
             List<User> users = userDao.findAllStudentsByTeacherId(User.class, (int) req.getSession().getAttribute("currentUser").getClass().getMethod("getId").invoke(req.getSession().getAttribute("currentUser")));
+            if ("date".equals(sort)) {
+                grades.sort(Comparator.comparing(Grade::getAddedDate));
+            } else if ("student".equals(sort)) {
+                grades.sort(Comparator.comparing(g -> g.getStudentSubject().getStudent().getName()));
+            } else if ("subject".equals(sort)) {
+                grades.sort(Comparator.comparing(g -> g.getStudentSubject().getSubject().getSubjectName()));
+            }
             req.setAttribute("grades", grades);
             req.setAttribute("subjects", subjects);
             req.setAttribute("students", users);

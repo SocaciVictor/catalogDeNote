@@ -12,35 +12,47 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "CoursesServlet", value = "/courses")
 public class CoursesServlet extends HttpServlet {
-
     private Connection dbConnection;
     private EntityDao<Subject> subjectDao;
-
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
             this.dbConnection = new DatabaseConnection("default");
             this.subjectDao = new EntityDao<>(dbConnection);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new ServletException("Error initializing CoursesServlet", e);
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<Subject> subjects = null;
+        String sort = req.getParameter("sort");
+        List<Subject> subjects;
         try {
-            subjects = subjectDao.findAll(Subject.class);
+            subjects = subjectDao.findAll(Subject.class).stream()
+                    .filter(Subject::getActive)
+                    .sorted(getComparator(sort))
+                    .collect(Collectors.toList());
+            req.setAttribute("subjects", subjects);
+            req.getRequestDispatcher("/views/courses.jsp").forward(req, resp);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        req.setAttribute("subjects", subjects);
-        req.getRequestDispatcher("/views/courses.jsp").forward(req, resp);
+    }
+
+    private Comparator<Subject> getComparator(String sort) {
+        if ("teacher".equals(sort)) {
+            return Comparator.comparing(subject -> subject.getTeacher().getName());
+        } else {  // Default to sort by subject name
+            return Comparator.comparing(Subject::getSubjectName);
+        }
     }
 
     @Override
@@ -52,3 +64,4 @@ public class CoursesServlet extends HttpServlet {
         }
     }
 }
+
