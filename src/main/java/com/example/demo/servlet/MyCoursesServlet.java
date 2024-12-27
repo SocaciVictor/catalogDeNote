@@ -38,6 +38,7 @@ public class MyCoursesServlet extends HttpServlet {
         List<Subject> subjects = null;
         try {
             subjects = subjectDao.findTeacherCoursesById(Subject.class, (int) req.getSession().getAttribute("currentUser").getClass().getMethod("getId").invoke(req.getSession().getAttribute("currentUser")));
+            System.out.println(subjects);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -69,7 +70,6 @@ public class MyCoursesServlet extends HttpServlet {
         }
         }else
         {
-            // TO DO Activate the entire database
             resp.sendRedirect("homeServlet");
         }
     }

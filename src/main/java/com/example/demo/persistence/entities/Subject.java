@@ -5,9 +5,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 @Entity
 @Table(name = "subjects", schema = "public")
 public class Subject implements PersistableEntity {
@@ -23,6 +25,7 @@ public class Subject implements PersistableEntity {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "teacher_id", nullable = false)
+    @ToString.Exclude
     private User teacher;
 
     @NotNull

@@ -70,6 +70,21 @@
             <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Add</button>
             <a href="myCourses" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded">Cancel</a>
         </c:if>
+
+        <c:if test="${action eq 'average'}">
+            <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">
+                Average
+            </h1>
+            <div class="mb-4">
+                    <%--@declare id="subjectname"--%><%--@declare id="average"--%><label class="block text-gray-700 text-sm font-bold mb-2" for="subjectName">
+                Course Name: ${subject.subjectName}
+            </label>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="average">
+                            Average Score: ${average}
+                        </label>
+
+            </div>
+        </c:if>
     </form>
 </div>
 </body>

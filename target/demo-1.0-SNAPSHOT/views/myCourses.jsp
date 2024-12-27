@@ -17,6 +17,7 @@
                 <div>
                     <a href="manageCourse?action=update&id=${subject.id}" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-2">Edit</a>
                     <a href="manageCourse?action=delete&id=${subject.id}" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Delete</a>
+                    <a href="manageCourse?action=average&id=${subject.id}" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">Average</a>
                 </div>
             </div>
         </c:forEach>

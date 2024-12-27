@@ -27,12 +27,10 @@ public abstract class Connection implements Closeable {
 
     public abstract <T extends PersistableEntity> void deleteSubject(int subjectId) throws Exception;
     public abstract <T extends PersistableEntity> void delete(T entity) throws Exception;
-
     public abstract <T extends PersistableEntity> void addGrade(T grade) throws Exception;
     public abstract <T extends PersistableEntity> void deleteGrade(T grade) throws Exception;
     public abstract <T extends PersistableEntity> void editGrade(T grade) throws Exception;
     public abstract <T extends PersistableEntity> void editSubject(int subjectId, String newSubjectName, int[] studentsId) throws Exception;
-
     public <T extends PersistableEntity> void addSubject(String subjectName, int teacherId,int[] studentIds) throws Exception{
     }
 

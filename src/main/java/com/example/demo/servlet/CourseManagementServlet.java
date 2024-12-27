@@ -3,6 +3,7 @@ package com.example.demo.servlet;
 import com.example.demo.persistence.connection.Connection;
 import com.example.demo.persistence.connection.database.DatabaseConnection;
 import com.example.demo.persistence.dao.EntityDao;
+import com.example.demo.persistence.entities.Grade;
 import com.example.demo.persistence.entities.StudentsSubject;
 import com.example.demo.persistence.entities.Subject;
 import com.example.demo.persistence.entities.User;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +26,7 @@ public class CourseManagementServlet extends HttpServlet {
     private EntityDao<Subject> subjectDao;
     private EntityDao<User> userDao;
     private EntityDao<StudentsSubject> studentsSubjectDao;
+    private EntityDao<Grade> gradeDao;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -32,6 +35,7 @@ public class CourseManagementServlet extends HttpServlet {
             this.subjectDao = new EntityDao<>(dbConnection);
             this.userDao = new EntityDao<>(dbConnection);
             this.studentsSubjectDao = new EntityDao<>(dbConnection);
+            this.gradeDao = new EntityDao<>(dbConnection);
         } catch (Exception e) {
             throw new ServletException("Error initializing servlet", e);
         }
@@ -74,6 +78,23 @@ public class CourseManagementServlet extends HttpServlet {
             req.setAttribute("action", action);
             req.getRequestDispatcher("/views/course.jsp").forward(req, resp);
         }
+        else if ("average".equals(action)) {
+            try{
+                int courseId = Integer.parseInt(req.getParameter("id"));
+                double average = 0;
+                Subject subject = subjectDao.findById(Subject.class, courseId);
+                List<Grade> gradeList = gradeDao.findAllGradesBySubjectId(Grade.class, courseId);
+                for (Grade grade : gradeList) {
+                    average += grade.getGradeValue().doubleValue();
+                }
+                req.setAttribute("action", action);
+                req.setAttribute("subject", subject);
+                req.setAttribute("average", average/gradeList.size());
+                req.getRequestDispatcher("/views/course.jsp").forward(req, resp);
+            }catch (Exception e){
+                throw new RuntimeException(e);
+            }
+        }
     }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -88,7 +109,9 @@ public class CourseManagementServlet extends HttpServlet {
                         .mapToInt(Integer::parseInt)
                         .toArray();
                 subjectDao.editSubject(courseId, subjectName, studentIdsInt);
-                resp.sendRedirect("myCourses");
+
+               // req.getRequestDispatcher("/views/myCourses.jsp").forward(req, resp);
+                 resp.sendRedirect("myCourses");
             } else if ("delete".equals(action)) {
                 int courseId = Integer.parseInt(req.getParameter("id"));
                 Subject subject = subjectDao.findById(Subject.class, courseId);
